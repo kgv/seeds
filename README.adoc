@@ -1,0 +1,23 @@
+= Seeds
+:nofooter:
+
+`set HOST_TRIPPLE=x86_64-unknown-linux-musl`
+
+HOST_TRIPLE=x86_64-unknown-linux-musl cargo build --target x86_64-unknown-linux-musl
+HOST_TRIPLE=x86_64-unknown-linux-gnu cargo build --target x86_64-unknown-linux-gnu
+
+* https://robotclass.ru/tutorials/opencv-python-find-contours[выделение контуров]
+* https://learnopencv.com/find-center-of-blob-centroid-using-opencv-cpp-python[Нахождение центроидов]
+* https://docs.opencv.org/3.3.1/d3/db4/tutorial_py_watershed.html[Watershed (монеты)]
+* https://stackoverflow.com/questions/58637168/remove-only-black-dot-in-the-image-using-opencv[Очистить от черных точек]
+* https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html[]
+
+* https://ru.wikipedia.org/wiki/%D0%A4%D0%BE%D1%80%D0%BC%D1%83%D0%BB%D0%B0_%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%B2%D0%BE%D0%B3%D0%BE_%D0%BE%D1%82%D0%BB%D0%B8%D1%87%D0%B8%D1%8F[Color difference]
+
+== Usage
+
+[rust]
+----
+cargo run -- "assets/20240416_164427.jpg"
+cargo run -- "assets/20240416_164427.jpg" --config="config.ron"
+----

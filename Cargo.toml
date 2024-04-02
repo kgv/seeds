@@ -1,0 +1,14 @@
+[package]
+name = "seeds"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.82"
+clap = { version = "4.5.4", features = ["derive"] }
+itertools = "0.12.1"
+# opencv = "0.90.0"
+opencv = { git = "https://github.com/TDiblik/opencv-rust-nightly-compilation.git" }
+ron = "0.8.1"
+serde = { version = "1.0.198", features = ["derive"] }
+# palette = "0.7.5"
