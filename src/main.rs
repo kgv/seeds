@@ -223,7 +223,7 @@ fn main() -> Result<()> {
         // draw_contours_def(&mut contoured, &approx_curve, FILLED, BLUE)?;
 
         // Mean colors
-        let color = {
+        let colors = {
             let radius = (incircle.radius / 2.0) as _;
             // RED
             let mut mask = Mat::zeros_size(source.size()?, CV_8UC1)?.to_mat()?;
@@ -239,12 +239,12 @@ fn main() -> Result<()> {
                 Default::default(),
             )?;
             let means = mean(&hsv, &mut mask)?;
-            let hsb = Hsb {
+            let contour = Hsb {
                 hue: means[0],
                 saturation: means[1],
                 brightness: means[2],
             };
-            let bgr = hsb.bgr()?;
+            let bgr = contour.bgr()?;
             circle(
                 &mut contoured,
                 bounding_rect.tl(),
@@ -268,12 +268,12 @@ fn main() -> Result<()> {
                 Default::default(),
             )?;
             let means = mean(&hsv, &mut mask)?;
-            let hsb = Hsb {
+            let max_incircle = Hsb {
                 hue: means[0],
                 saturation: means[1],
                 brightness: means[2],
             };
-            let bgr = hsb.bgr()?;
+            let bgr = max_incircle.bgr()?;
             circle(
                 &mut contoured,
                 bounding_rect.tr(),
@@ -297,12 +297,12 @@ fn main() -> Result<()> {
                 Default::default(),
             )?;
             let means = mean(&hsv, &mut mask)?;
-            let hsb = Hsb {
+            let incircle = Hsb {
                 hue: means[0],
                 saturation: means[1],
                 brightness: means[2],
             };
-            let bgr = hsb.bgr()?;
+            let bgr = incircle.bgr()?;
             circle(
                 &mut contoured,
                 bounding_rect.br(),
@@ -314,7 +314,11 @@ fn main() -> Result<()> {
             )?;
             circle_def(&mut contoured, bounding_rect.br(), radius, MAGENTA)?;
 
-            hsb
+            Colors {
+                contour,
+                max_incircle,
+                incircle,
+            }
         };
 
         put_text_def(
@@ -330,7 +334,7 @@ fn main() -> Result<()> {
             circumcircle_radius: min_circumcircle.radius,
             incircle_radius: max_incircle.radius,
             perimeter,
-            color,
+            colors,
         });
     }
     let path = cli.path.with_extension("contoured.png");
@@ -357,7 +361,15 @@ struct Seed {
     circumcircle_radius: f64,
     incircle_radius: f64,
     perimeter: f64,
-    color: Hsb,
+    colors: Colors,
+}
+
+/// Colors
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
+struct Colors {
+    contour: Hsb,
+    max_incircle: Hsb,
+    incircle: Hsb,
 }
 
 /// Hsb
