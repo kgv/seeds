@@ -31,6 +31,7 @@ impl Node {
             Self::ConvertColor(ConvertColor { src, .. }) => src,
             // Self::ConvexHull(ConvexHull { src, .. }) => src,
             Self::Dilate(Dilate { src, .. }) => src,
+            Self::FindContours(FindContours { image, .. }) => image,
             Self::GreaterThan(GreaterThan { a, .. }) => a,
             Self::MedianBlur(MedianBlur { src, .. }) => src,
             Self::Subtract(Subtract { src1, .. }) if index == 0 => src1,

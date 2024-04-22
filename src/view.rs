@@ -1,5 +1,8 @@
 use crate::{
-    cache::NodeCache,
+    cache::{
+        ConvertColorCache, DilateCache, FindContoursCache, GreaterThanCache, MedianBlurCache,
+        ReadCache, SubtractCache, ThresholdCache,
+    },
     node::{
         ConvertColor, Dilate, FindContours, GreaterThan, MedianBlur, Node, Read, Subtract,
         Threshold, Write,
@@ -30,10 +33,11 @@ use std::{
 };
 use tracing::error;
 
-const MATRIX_COLOR: Color32 = Color32::from_rgb(0xb0, 0x00, 0x00);
+const RED: Color32 = Color32::from_rgb(0xb0, 0x00, 0x00);
 const _COLOR: Color32 = Color32::from_rgb(0xb0, 0xb0, 0x00);
-const VECTOR_COLOR: Color32 = Color32::from_rgb(0x00, 0xb0, 0x00);
+const GREEN: Color32 = Color32::from_rgb(0x00, 0xb0, 0x00);
 const IMAGE_COLOR: Color32 = Color32::from_rgb(0xb0, 0x00, 0xb0);
+const _BLUE: Color32 = Color32::from_rgb(0x00, 0x00, 0xb0);
 const UNTYPED_COLOR: Color32 = Color32::from_rgb(0xb0, 0xb0, 0xb0);
 
 pub struct Viewer<'a> {
@@ -91,12 +95,12 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
             Node::Read(_) => 0,
             Node::Write(_) => 3,
             Node::ConvertColor(_) => 1,
-            Node::Dilate(_) => 4,
+            Node::Dilate(_) => 2,
             Node::FindContours(_) => 4,
             Node::GreaterThan(_) => 2,
             Node::MedianBlur(_) => 2,
             Node::Subtract(_) => 2,
-            Node::Threshold(_) => 1,
+            Node::Threshold(_) => 3,
         }
     }
 
@@ -115,89 +119,74 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
         snarl: &mut Snarl<Node>,
     ) -> PinInfo {
         if let Some(remote) = pin.remotes.get(0) {
-            if let Some(value) =
-                ui.memory_mut(|memory| memory.caches.cache::<NodeCache>().get(&snarl[remote.node]))
-            {
-                *snarl[pin.id.node].r#in(pin.id.input) = value;
-            }
+            ui.memory_mut(|memory| match &snarl[remote.node] {
+                Node::Read(read) => match memory.caches.cache::<ReadCache>().get(read) {
+                    Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                    Err(error) => error!(%error),
+                },
+                Node::Write(_write) => unreachable!(),
+                Node::ConvertColor(convert_color) => match memory
+                    .caches
+                    .cache::<ConvertColorCache>()
+                    .get(convert_color)
+                {
+                    Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                    Err(error) => error!(%error),
+                },
+                Node::Dilate(dilate) => match memory.caches.cache::<DilateCache>().get(dilate) {
+                    Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                    Err(error) => error!(%error),
+                },
+                Node::FindContours(find_contours) => match memory
+                    .caches
+                    .cache::<FindContoursCache>()
+                    .get(find_contours)
+                {
+                    Ok(_) => {}
+                    Err(error) => error!(%error),
+                },
+                Node::GreaterThan(greater_than) => {
+                    match memory.caches.cache::<GreaterThanCache>().get(greater_than) {
+                        Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                        Err(error) => error!(%error),
+                    }
+                }
+                Node::MedianBlur(median_blur) => {
+                    match memory.caches.cache::<MedianBlurCache>().get(median_blur) {
+                        Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                        Err(error) => error!(%error),
+                    }
+                }
+                Node::Subtract(subtract) => {
+                    match memory.caches.cache::<SubtractCache>().get(subtract) {
+                        Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                        Err(error) => error!(%error),
+                    }
+                }
+                Node::Threshold(threshold) => {
+                    match memory.caches.cache::<ThresholdCache>().get(threshold) {
+                        Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                        Err(error) => error!(%error),
+                    }
+                }
+            });
+
+            // if let Some(value) =
+            //     ui.memory_mut(|memory| memory.caches.cache::<NodeCache>().get(&snarl[remote.node]))
+            // {
+            //     *snarl[pin.id.node].r#in(pin.id.input) = value;
+            // }
         };
-        //  else {
-        //     *snarl[pin.id.node].r#in(pin.id.input) = Default::default();
-        // };
-        // if let Node::Write(Write { img, .. }) = &snarl[pin.id.node] {
-        //     tracing::error!("Write {img}");
-        // }
         match &mut snarl[pin.id.node] {
             Node::Read(_) => unreachable!("Read node has 0 inputs"),
-            Node::Write(Write { img, path }) => match pin.id.input {
-                0 if pin.remotes.is_empty() => PinInfo::square().with_fill(UNTYPED_COLOR),
-                0 => {
-                    ui.label(format!("{img}"));
-                    PinInfo::square().with_fill(MATRIX_COLOR)
-                }
-                1 => {
-                    let mut text = path.to_string_lossy();
-                    if ui.text_edit_singleline(&mut text).changed() {
-                        *path = PathBuf::from(&*text)
-                    }
-                    PinInfo::none()
-                }
-                2 => {
-                    if ui.button("Save").clicked() {
-                        ui.memory_mut(|memory| {
-                            memory.caches.cache::<NodeCache>().get(&snarl[pin.id.node])
-                        });
-                    }
-                    let id = Id::new("auto_save");
-                    let mut checked = ui.data(|data| data.get_temp(id)).unwrap_or_default();
-                    if ui.checkbox(&mut checked, "Auto save").changed() {
-                        ui.data_mut(|data| data.insert_temp(id, checked))
-                    }
-                    if checked {
-                        ui.memory_mut(|memory| {
-                            memory.caches.cache::<NodeCache>().get(&snarl[pin.id.node]);
-                        });
-                    }
-                    PinInfo::none()
-                }
-                _ => unreachable!("Write node has 3 inputs"),
-            },
-            Node::ConvertColor(ConvertColor { src, from, to, .. }) => match pin.id.input {
-                0 if pin.remotes.is_empty() => PinInfo::square().with_fill(UNTYPED_COLOR),
-                0 => {
-                    ui.label(format!("{src}"));
-                    PinInfo::square().with_fill(MATRIX_COLOR)
-                }
-                _ => unreachable!("ConvertColor node has only 1 input"),
-            },
+            Node::Write(write) => write.show_input(ui, pin),
+            Node::ConvertColor(convert_color) => convert_color.show_input(ui, pin),
             Node::Dilate(dilate) => dilate.show_input(ui, pin),
             Node::FindContours(find_contours) => find_contours.show_input(ui, pin),
             Node::GreaterThan(greater_than) => greater_than.show_input(ui, pin),
             Node::MedianBlur(median_blur) => median_blur.show_input(ui, pin),
-            Node::Subtract(_) => {
-                assert!(pin.id.input < 2, "Subtract node has 2 inputs");
-                if pin.remotes.is_empty() {
-                    PinInfo::square().with_fill(UNTYPED_COLOR)
-                } else {
-                    PinInfo::square().with_fill(MATRIX_COLOR)
-                }
-            }
-            Node::Threshold(Threshold { thresh, maxval, .. }) => {
-                assert_eq!(pin.id.input, 0, "Threshold node has only 1 input");
-                ui.add(DragValue::new(thresh).speed(1.0).clamp_range(0.0..=*maxval))
-                    .on_hover_text("thresh");
-                ui.add(
-                    DragValue::new(maxval)
-                        .speed(1.0)
-                        .clamp_range(*thresh..=255.0),
-                )
-                .on_hover_text("maxval");
-                if pin.remotes.is_empty() {
-                    PinInfo::square().with_fill(UNTYPED_COLOR)
-                } else {
-                    PinInfo::square().with_fill(MATRIX_COLOR)
-                }
-            }
+            Node::Subtract(subtract) => subtract.show_input(ui, pin),
+            Node::Threshold(threshold) => threshold.show_input(ui, pin),
         }
     }
 
@@ -218,7 +207,7 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
                 if pin.remotes.is_empty() {
                     return PinInfo::square().with_fill(UNTYPED_COLOR);
                 }
-                PinInfo::square().with_fill(MATRIX_COLOR)
+                PinInfo::square().with_fill(RED)
             }
             Node::Write(_) => unreachable!("Write node has no outputs"),
             Node::ConvertColor(_) => {
@@ -226,49 +215,49 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
                 if pin.remotes.is_empty() {
                     return PinInfo::square().with_fill(UNTYPED_COLOR);
                 }
-                PinInfo::square().with_fill(MATRIX_COLOR)
+                PinInfo::square().with_fill(RED)
             }
             Node::Dilate(_) => {
                 assert_eq!(pin.id.output, 0, "ConvertColor node has only one output");
                 if pin.remotes.is_empty() {
                     return PinInfo::square().with_fill(UNTYPED_COLOR);
                 }
-                PinInfo::square().with_fill(MATRIX_COLOR)
+                PinInfo::square().with_fill(RED)
             }
             Node::FindContours(_) => {
                 assert_eq!(pin.id.output, 0, "FindContours node has only one output");
                 if pin.remotes.is_empty() {
                     return PinInfo::triangle().with_fill(UNTYPED_COLOR);
                 }
-                PinInfo::triangle().with_fill(VECTOR_COLOR)
+                PinInfo::triangle().with_fill(GREEN)
             }
             Node::GreaterThan(_) => {
                 assert_eq!(pin.id.output, 0, "GreaterThan node has only one output");
                 if pin.remotes.is_empty() {
                     return PinInfo::square().with_fill(UNTYPED_COLOR);
                 }
-                PinInfo::square().with_fill(MATRIX_COLOR)
+                PinInfo::square().with_fill(RED)
             }
             Node::MedianBlur(_) => {
                 assert_eq!(pin.id.output, 0, "MedianBlur node has only one output");
                 if pin.remotes.is_empty() {
                     return PinInfo::square().with_fill(UNTYPED_COLOR);
                 }
-                PinInfo::square().with_fill(MATRIX_COLOR)
+                PinInfo::square().with_fill(RED)
             }
             Node::Subtract(_) => {
                 assert_eq!(pin.id.output, 0, "Subtract node has only one output");
                 if pin.remotes.is_empty() {
                     return PinInfo::square().with_fill(UNTYPED_COLOR);
                 }
-                PinInfo::square().with_fill(MATRIX_COLOR)
+                PinInfo::square().with_fill(RED)
             }
             Node::Threshold(_) => {
                 assert_eq!(pin.id.output, 0, "Threshold node has only one output");
                 if pin.remotes.is_empty() {
                     return PinInfo::square().with_fill(UNTYPED_COLOR);
                 }
-                PinInfo::square().with_fill(MATRIX_COLOR)
+                PinInfo::square().with_fill(RED)
             }
         }
     }
@@ -366,14 +355,18 @@ pub trait PinInfoExt {
 
 impl PinInfoExt for PinInfo {
     fn none() -> PinInfo {
-        PinInfo::none()
+        PinInfo::custom(|_, _, _, _| {})
     }
 }
 
+mod convert_color;
 mod dilate;
 mod find_contours;
 mod greater_than;
 mod median_blur;
+mod subtract;
+mod threshold;
+mod write;
 
 // trait UiExt {
 //     fn update<C, K>(&mut self, snarl: &mut Snarl<Node>, pin: &OutPin, key: impl Copy + Hash)

@@ -11,6 +11,7 @@ use std::{
 
 /// Sync [`Mat`]
 #[derive(Clone, Debug, Default)]
+#[repr(transparent)]
 pub struct SyncMat(pub Mat);
 
 impl Display for SyncMat {
