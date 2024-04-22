@@ -6,8 +6,16 @@
 * https://docs.opencv.org/3.3.1/d3/db4/tutorial_py_watershed.html[Watershed (монеты)]
 * https://stackoverflow.com/questions/58637168/remove-only-black-dot-in-the-image-using-opencv[Очистить от черных точек]
 * https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html[Moments, ...]
+* https://stackoverflow.com/questions/53646022/opencv-c-find-inscribing-circle-of-a-contour[Вписанная окружность]
 
 * https://ru.wikipedia.org/wiki/%D0%A4%D0%BE%D1%80%D0%BC%D1%83%D0%BB%D0%B0_%D1%86%D0%B2%D0%B5%D1%82%D0%BE%D0%B2%D0%BE%D0%B3%D0%BE_%D0%BE%D1%82%D0%BB%D0%B8%D1%87%D0%B8%D1%8F[Color difference]
+* https://docs.opencv.org/4.x/d5/d45/tutorial_py_contours_more_functions.html[Выпуклость контура, Дефекты выпуклости]
+
+---
+
+* https://www.calculator.net/standard-deviation-calculator.html[]
+* https://ami.nstu.ru/~headrd/seminar/publik_html/Z_lab_8.htm[О выборе числа интервалов в критериях согласия типа]
+* https://rep.bstu.by/bitstream/handle/data/26715/82-85.pdf[Критерий согласия пирсона и методы группирования данных]
 
 == Usage
 
@@ -15,6 +23,7 @@
 ----
 cargo run -- "assets/20240416_164427.jpg"
 cargo run -- "assets/20240416_164427.jpg" --config="config.ron"
+cargo run --bin=algae -- "assets/SNAP-212329-0051/SNAP-212329-0051.tif" --config="config.ron"
 ----
 
 == Errors

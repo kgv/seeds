@@ -7,6 +7,6 @@
     contours: (
         mode: 0,
         method: 2,
-        min_area: 1000.0,
+        min_area: 500.0,
     ),
 )
