@@ -18,7 +18,7 @@ impl View for Threshold {
                         .clamp_range(0.0..=self.maxval),
                 )
                 .on_hover_text("thresh");
-                PinInfo::none()
+                PinInfo::circle().with_fill(UNTYPED_COLOR)
             }
             2 => {
                 ui.add(
@@ -27,7 +27,7 @@ impl View for Threshold {
                         .clamp_range(self.thresh..=255.0),
                 )
                 .on_hover_text("maxval");
-                PinInfo::none()
+                PinInfo::circle().with_fill(UNTYPED_COLOR)
             }
             _ => unreachable!("Threshold node has 3 inputs"),
         }

@@ -24,7 +24,7 @@ impl View for FindContours {
                     })
                     .response
                     .on_hover_text("Mode");
-                PinInfo::none()
+                PinInfo::circle().with_fill(UNTYPED_COLOR)
             }
             2 => {
                 ComboBox::from_label("method")
@@ -41,14 +41,14 @@ impl View for FindContours {
                     })
                     .response
                     .on_hover_text("Method");
-                PinInfo::none()
+                PinInfo::circle().with_fill(UNTYPED_COLOR)
             }
             3 => {
                 ui.add(DragValue::new(&mut self.offset.x))
                     .on_hover_text("Offset x");
                 ui.add(DragValue::new(&mut self.offset.y))
                     .on_hover_text("Offset y");
-                PinInfo::none()
+                PinInfo::circle().with_fill(UNTYPED_COLOR)
             }
             _ => unreachable!("FindContours node has 4 inputs"),
         }

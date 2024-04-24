@@ -14,7 +14,7 @@ impl View for GreaterThan {
             1 => {
                 ui.add(DragValue::new(&mut self.s).speed(2).clamp_range(3..=999))
                     .on_hover_text("s");
-                PinInfo::none()
+                PinInfo::circle().with_fill(UNTYPED_COLOR)
             }
             _ => unreachable!("GreaterThan node has 2 inputs"),
         }

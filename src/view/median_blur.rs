@@ -18,7 +18,7 @@ impl View for MedianBlur {
                         .clamp_range(3..=999),
                 )
                 .on_hover_text("ksize");
-                PinInfo::none()
+                PinInfo::circle().with_fill(UNTYPED_COLOR)
             }
             _ => unreachable!("MedianBlur node has 2 inputs"),
         }

@@ -93,9 +93,9 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
     fn inputs(&mut self, node: &Node) -> usize {
         match node {
             Node::Read(_) => 0,
-            Node::Write(_) => 3,
+            Node::Write(_) => 1,
             Node::ConvertColor(_) => 1,
-            Node::Dilate(_) => 2,
+            Node::Dilate(_) => 1,
             Node::FindContours(_) => 4,
             Node::GreaterThan(_) => 2,
             Node::MedianBlur(_) => 2,
@@ -262,6 +262,42 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
         }
     }
 
+    fn has_footer(&mut self, node: &Node) -> bool {
+        match node {
+            Node::Write(_) => true,
+            Node::ConvertColor(_) => true,
+            Node::Dilate(_) => true,
+            Node::FindContours(_) => true,
+            Node::GreaterThan(_) => true,
+            Node::MedianBlur(_) => true,
+            Node::Subtract(_) => true,
+            Node::Threshold(_) => true,
+            _ => false,
+        }
+    }
+
+    fn show_footer(
+        &mut self,
+        node: NodeId,
+        inputs: &[InPin],
+        outputs: &[OutPin],
+        ui: &mut Ui,
+        scale: f32,
+        snarl: &mut Snarl<Node>,
+    ) {
+        match &mut snarl[node] {
+            Node::Read(_) => unreachable!("Read node has 0 inputs"),
+            Node::Write(write) => write.show_body(ui),
+            Node::ConvertColor(convert_color) => convert_color.show_body(ui),
+            Node::Dilate(dilate) => dilate.show_body(ui),
+            Node::FindContours(find_contours) => find_contours.show_body(ui),
+            Node::GreaterThan(greater_than) => greater_than.show_body(ui),
+            Node::MedianBlur(median_blur) => median_blur.show_body(ui),
+            Node::Subtract(subtract) => subtract.show_body(ui),
+            Node::Threshold(threshold) => threshold.show_body(ui),
+        }
+    }
+
     fn has_graph_menu(&mut self, _pos: Pos2, _snarl: &mut Snarl<Node>) -> bool {
         true
     }
@@ -346,6 +382,8 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
 
 pub trait View {
     fn show_input(&mut self, ui: &mut Ui, pin: &InPin) -> PinInfo;
+
+    fn show_body(&mut self, _ui: &mut Ui) {}
 }
 
 /// Ext for [`PinInfo`]

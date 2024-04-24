@@ -27,7 +27,7 @@ impl App {
         //     .node_ids()
         //     .filter_map(|(node_idx, node)| node.has_image().then_some(node_idx))
         //     .collect();
-        // let snarl = Default::default();
+        let snarl = Default::default();
         Self {
             #[cfg(not(target_arch = "wasm32"))]
             path: None,
