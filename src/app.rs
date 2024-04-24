@@ -1,8 +1,13 @@
 use crate::{node::Node, view::Viewer};
 use clap::crate_version;
 use eframe::{get_value, set_value, CreationContext, Frame, Storage, APP_KEY};
-use egui::{github_link_file, warn_if_debug_build, Align, CentralPanel, Context, Id, Layout};
-use egui_snarl::{ui::SnarlStyle, NodeId, Snarl};
+use egui::{
+    github_link_file, warn_if_debug_build, Align, CentralPanel, Context, Id, Layout, Margin, Vec2,
+};
+use egui_snarl::{
+    ui::{BackgroundPattern, SnarlStyle, WireStyle},
+    NodeId, Snarl,
+};
 use std::{collections::HashSet, path::PathBuf};
 
 // crate_version!()
@@ -27,7 +32,7 @@ impl App {
         //     .node_ids()
         //     .filter_map(|(node_idx, node)| node.has_image().then_some(node_idx))
         //     .collect();
-        let snarl = Default::default();
+        // let snarl = Default::default();
         Self {
             #[cfg(not(target_arch = "wasm32"))]
             path: None,
@@ -53,6 +58,7 @@ impl eframe::App for App {
                 },
                 &SnarlStyle {
                     _collapsible: Some(true),
+                    _bg_pattern: Some(BackgroundPattern::grid(Vec2::splat(100.0), 0.0)),
                     ..Default::default()
                 },
                 Id::new("snarl"),

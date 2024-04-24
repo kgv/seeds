@@ -17,29 +17,24 @@ use egui_snarl::{
     ui::{PinInfo, SnarlViewer},
     InPin, NodeId, OutPin, Snarl,
 };
-use opencv::{
-    core::{BorderTypes, Mat, MatExprTraitConst, MatTraitConst},
-    imgproc::{
-        RetrievalModes, CHAIN_APPROX_NONE, CHAIN_APPROX_SIMPLE, CHAIN_APPROX_TC89_KCOS,
-        CHAIN_APPROX_TC89_L1, RETR_CCOMP, RETR_EXTERNAL, RETR_FLOODFILL, RETR_LIST, RETR_TREE,
-    },
-};
-use std::{
-    collections::HashSet,
-    hash::Hash,
-    mem::{replace, take, zeroed, MaybeUninit},
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{collections::HashSet, path::PathBuf};
 use tracing::error;
 
-const RED: Color32 = Color32::from_rgb(0xb0, 0x00, 0x00);
-const _COLOR: Color32 = Color32::from_rgb(0xb0, 0xb0, 0x00);
-const GREEN: Color32 = Color32::from_rgb(0x00, 0xb0, 0x00);
-const IMAGE_COLOR: Color32 = Color32::from_rgb(0xb0, 0x00, 0xb0);
-const _BLUE: Color32 = Color32::from_rgb(0x00, 0x00, 0xb0);
-const UNTYPED_COLOR: Color32 = Color32::from_rgb(0xb0, 0xb0, 0xb0);
+pub(crate) const RED: Color32 = Color32::from_rgb(0xb0, 0x00, 0x00);
+pub(crate) const _COLOR: Color32 = Color32::from_rgb(0xb0, 0xb0, 0x00);
+pub(crate) const GREEN: Color32 = Color32::from_rgb(0x00, 0xb0, 0x00);
+pub(crate) const IMAGE_COLOR: Color32 = Color32::from_rgb(0xb0, 0x00, 0xb0);
+pub(crate) const _BLUE: Color32 = Color32::from_rgb(0x00, 0x00, 0xb0);
+pub(crate) const UNTYPED_COLOR: Color32 = Color32::from_rgb(0xb0, 0xb0, 0xb0);
 
+/// View
+pub(crate) trait View {
+    fn show_input(&mut self, ui: &mut Ui, pin: &InPin) -> PinInfo;
+
+    fn show_body(&mut self, _ui: &mut Ui) {}
+}
+
+/// Viewer
 pub struct Viewer<'a> {
     pub removed_ids: &'a mut HashSet<NodeId>,
     pub updated_ids: &'a mut HashSet<NodeId>,
@@ -96,11 +91,11 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
             Node::Write(_) => 1,
             Node::ConvertColor(_) => 1,
             Node::Dilate(_) => 1,
-            Node::FindContours(_) => 4,
-            Node::GreaterThan(_) => 2,
-            Node::MedianBlur(_) => 2,
+            Node::FindContours(_) => 1,
+            Node::GreaterThan(_) => 1,
+            Node::MedianBlur(_) => 1,
             Node::Subtract(_) => 2,
-            Node::Threshold(_) => 3,
+            Node::Threshold(_) => 1,
         }
     }
 
@@ -121,7 +116,7 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
         if let Some(remote) = pin.remotes.get(0) {
             ui.memory_mut(|memory| match &snarl[remote.node] {
                 Node::Read(read) => match memory.caches.cache::<ReadCache>().get(read) {
-                    Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                    Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
                     Err(error) => error!(%error),
                 },
                 Node::Write(_write) => unreachable!(),
@@ -130,11 +125,11 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
                     .cache::<ConvertColorCache>()
                     .get(convert_color)
                 {
-                    Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                    Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
                     Err(error) => error!(%error),
                 },
                 Node::Dilate(dilate) => match memory.caches.cache::<DilateCache>().get(dilate) {
-                    Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                    Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
                     Err(error) => error!(%error),
                 },
                 Node::FindContours(find_contours) => match memory
@@ -147,25 +142,25 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
                 },
                 Node::GreaterThan(greater_than) => {
                     match memory.caches.cache::<GreaterThanCache>().get(greater_than) {
-                        Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                        Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
                         Err(error) => error!(%error),
                     }
                 }
                 Node::MedianBlur(median_blur) => {
                     match memory.caches.cache::<MedianBlurCache>().get(median_blur) {
-                        Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                        Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
                         Err(error) => error!(%error),
                     }
                 }
                 Node::Subtract(subtract) => {
                     match memory.caches.cache::<SubtractCache>().get(subtract) {
-                        Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                        Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
                         Err(error) => error!(%error),
                     }
                 }
                 Node::Threshold(threshold) => {
                     match memory.caches.cache::<ThresholdCache>().get(threshold) {
-                        Ok(out) => *snarl[pin.id.node].r#in(pin.id.input) = out,
+                        Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
                         Err(error) => error!(%error),
                     }
                 }
@@ -200,10 +195,13 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
         match &mut snarl[pin.id.node] {
             Node::Read(read) => {
                 assert_eq!(pin.id.output, 0, "Read node has only one output");
-                let mut text = read.path.to_string_lossy();
-                if ui.text_edit_singleline(&mut text).changed() {
-                    read.path = PathBuf::from(&*text);
-                }
+                ui.horizontal(|ui| {
+                    let mut text = read.path.to_string_lossy();
+                    if ui.text_edit_singleline(&mut text).changed() {
+                        read.path = PathBuf::from(&*text);
+                    }
+                    ui.label("Path:");
+                });
                 if pin.remotes.is_empty() {
                     return PinInfo::square().with_fill(UNTYPED_COLOR);
                 }
@@ -379,57 +377,3 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
         }
     }
 }
-
-pub trait View {
-    fn show_input(&mut self, ui: &mut Ui, pin: &InPin) -> PinInfo;
-
-    fn show_body(&mut self, _ui: &mut Ui) {}
-}
-
-/// Ext for [`PinInfo`]
-pub trait PinInfoExt {
-    fn none() -> PinInfo;
-}
-
-impl PinInfoExt for PinInfo {
-    fn none() -> PinInfo {
-        PinInfo::custom(|_, _, _, _| {})
-    }
-}
-
-mod convert_color;
-mod dilate;
-mod find_contours;
-mod greater_than;
-mod median_blur;
-mod subtract;
-mod threshold;
-mod write;
-
-// trait UiExt {
-//     fn update<C, K>(&mut self, snarl: &mut Snarl<Node>, pin: &OutPin, key: impl Copy + Hash)
-//     where
-//         C: ComputerMut<K, Option<Arc<SyncMat>>> + Default;
-//     // C: CacheTrait + Default,
-//     // FrameCache<Option<Arc<SyncMat>>, T>: ComputerMut<K, Option<Arc<SyncMat>>>;
-// }
-
-// impl UiExt for Ui {
-//     fn update<C, K>(&mut self, snarl: &mut Snarl<Node>, pin: &OutPin, key: impl Copy + Hash)
-//     where
-//         C: ComputerMut<K, Option<Arc<SyncMat>>> + Default,
-//         // C: CacheTrait + Default,
-//         // FrameCache<Option<Arc<SyncMat>>, T>: ComputerMut<K, Option<Arc<SyncMat>>>,
-//     {
-//         if let Some(out) = self.memory_mut(|memory| {
-//             memory
-//                 .caches
-//                 .cache::<FrameCache<Option<Arc<SyncMat>>, C>>()
-//                 .get(key)
-//         }) {
-//             for remote in &pin.remotes {
-//                 *snarl[remote.node].r#in(0) = out.clone();
-//             }
-//         }
-//     }
-// }

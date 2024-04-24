@@ -1,7 +1,20 @@
-use super::{View, RED, UNTYPED_COLOR};
-use crate::node::Subtract;
+use crate::{
+    utils::SyncMat,
+    view::{View, RED, UNTYPED_COLOR},
+};
 use egui::Ui;
 use egui_snarl::{ui::PinInfo, InPin};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+/// Subtract
+#[derive(Clone, Debug, Default, Deserialize, Hash, Serialize)]
+pub struct Subtract {
+    #[serde(skip)]
+    pub src1: Arc<SyncMat>,
+    #[serde(skip)]
+    pub src2: Arc<SyncMat>,
+}
 
 impl View for Subtract {
     fn show_input(&mut self, ui: &mut Ui, pin: &InPin) -> PinInfo {
