@@ -173,19 +173,18 @@ impl View for ConvertColor {
                     ui.selectable_value(&mut self.code, COLOR_BayerGB2BGRA as _, "BayerGB2BGRA");
                     ui.selectable_value(&mut self.code, COLOR_BayerRG2BGRA as _, "BayerRG2BGRA");
                     ui.selectable_value(&mut self.code, COLOR_BayerGR2BGRA as _, "BayerGR2BGRA");
-                    ui.selectable_value(&mut self.code, COLOR_RGB2YUV_UYVY as _, "RGB2YUV_UYVY");
-                    ui.selectable_value(&mut self.code, COLOR_BGR2YUV_UYVY as _, "BGR2YUV_UYVY");
-                    ui.selectable_value(&mut self.code, COLOR_RGBA2YUV_UYVY as _, "RGBA2YUV_UYVY");
-                    ui.selectable_value(&mut self.code, COLOR_BGRA2YUV_UYVY as _, "BGRA2YUV_UYVY");
-                    ui.selectable_value(&mut self.code, COLOR_RGB2YUV_YUY2 as _, "RGB2YUV_YUY2");
-                    ui.selectable_value(&mut self.code, COLOR_BGR2YUV_YUY2 as _, "BGR2YUV_YUY2");
-                    ui.selectable_value(&mut self.code, COLOR_RGB2YUV_YVYU as _, "RGB2YUV_YVYU");
-                    ui.selectable_value(&mut self.code, COLOR_BGR2YUV_YVYU as _, "BGR2YUV_YVYU");
-                    ui.selectable_value(&mut self.code, COLOR_RGBA2YUV_YUY2 as _, "RGBA2YUV_YUY2");
-                    ui.selectable_value(&mut self.code, COLOR_BGRA2YUV_YUY2 as _, "BGRA2YUV_YUY2");
-                    ui.selectable_value(&mut self.code, COLOR_RGBA2YUV_YVYU as _, "RGBA2YUV_YVYU");
-                    ui.selectable_value(&mut self.code, COLOR_BGRA2YUV_YVYU as _, "BGRA2YUV_YVYU");
-                    ui.selectable_value(&mut self.code, COLOR_COLORCVT_MAX as _, "COLORCVT_MAX");
+                    // ui.selectable_value(&mut self.code, COLOR_RGB2YUV_UYVY as _, "RGB2YUV_UYVY");
+                    // ui.selectable_value(&mut self.code, COLOR_BGR2YUV_UYVY as _, "BGR2YUV_UYVY");
+                    // ui.selectable_value(&mut self.code, COLOR_RGBA2YUV_UYVY as _, "RGBA2YUV_UYVY");
+                    // ui.selectable_value(&mut self.code, COLOR_BGRA2YUV_UYVY as _, "BGRA2YUV_UYVY");
+                    // ui.selectable_value(&mut self.code, COLOR_RGB2YUV_YUY2 as _, "RGB2YUV_YUY2");
+                    // ui.selectable_value(&mut self.code, COLOR_BGR2YUV_YUY2 as _, "BGR2YUV_YUY2");
+                    // ui.selectable_value(&mut self.code, COLOR_RGB2YUV_YVYU as _, "RGB2YUV_YVYU");
+                    // ui.selectable_value(&mut self.code, COLOR_BGR2YUV_YVYU as _, "BGR2YUV_YVYU");
+                    // ui.selectable_value(&mut self.code, COLOR_RGBA2YUV_YUY2 as _, "RGBA2YUV_YUY2");
+                    // ui.selectable_value(&mut self.code, COLOR_BGRA2YUV_YUY2 as _, "BGRA2YUV_YUY2");
+                    // ui.selectable_value(&mut self.code, COLOR_RGBA2YUV_YVYU as _, "RGBA2YUV_YVYU");
+                    // ui.selectable_value(&mut self.code, COLOR_BGRA2YUV_YVYU as _, "BGRA2YUV_YVYU");
                 })
                 .response
                 .on_hover_text("Color conversion code");
