@@ -116,7 +116,7 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
         if let Some(remote) = pin.remotes.get(0) {
             ui.memory_mut(|memory| match &snarl[remote.node] {
                 Node::Read(read) => match memory.caches.cache::<ReadCache>().get(read) {
-                    Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
+                    Ok(out) => *snarl[pin.id.node].as_mat_mut(pin.id.input) = out,
                     Err(error) => error!(%error),
                 },
                 Node::Write(_write) => unreachable!(),
@@ -125,11 +125,11 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
                     .cache::<ConvertColorCache>()
                     .get(convert_color)
                 {
-                    Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
+                    Ok(out) => *snarl[pin.id.node].as_mat_mut(pin.id.input) = out,
                     Err(error) => error!(%error),
                 },
                 Node::Dilate(dilate) => match memory.caches.cache::<DilateCache>().get(dilate) {
-                    Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
+                    Ok(out) => *snarl[pin.id.node].as_mat_mut(pin.id.input) = out,
                     Err(error) => error!(%error),
                 },
                 Node::FindContours(find_contours) => match memory
@@ -142,25 +142,25 @@ impl<'a> SnarlViewer<Node> for Viewer<'a> {
                 },
                 Node::GreaterThan(greater_than) => {
                     match memory.caches.cache::<GreaterThanCache>().get(greater_than) {
-                        Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
+                        Ok(out) => *snarl[pin.id.node].as_mat_mut(pin.id.input) = out,
                         Err(error) => error!(%error),
                     }
                 }
                 Node::MedianBlur(median_blur) => {
                     match memory.caches.cache::<MedianBlurCache>().get(median_blur) {
-                        Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
+                        Ok(out) => *snarl[pin.id.node].as_mat_mut(pin.id.input) = out,
                         Err(error) => error!(%error),
                     }
                 }
                 Node::Subtract(subtract) => {
                     match memory.caches.cache::<SubtractCache>().get(subtract) {
-                        Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
+                        Ok(out) => *snarl[pin.id.node].as_mat_mut(pin.id.input) = out,
                         Err(error) => error!(%error),
                     }
                 }
                 Node::Threshold(threshold) => {
                     match memory.caches.cache::<ThresholdCache>().get(threshold) {
-                        Ok(out) => *snarl[pin.id.node].mat_mut(pin.id.input) = out,
+                        Ok(out) => *snarl[pin.id.node].as_mat_mut(pin.id.input) = out,
                         Err(error) => error!(%error),
                     }
                 }
