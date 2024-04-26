@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::{command, Parser};
-use config::Config;
+use finder::Config;
+use finder::Hsb;
 use opencv::{
     core::{
         greater_than_mat_f64, max, mean, min_max_loc, min_max_loc_def, no_array, subtract_def,
@@ -20,18 +21,9 @@ use opencv::{
     },
     prelude::*,
 };
-use ordered_float::OrderedFloat;
 use ron::ser::{to_writer_pretty, PrettyConfig};
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::PathBuf, process::exit};
-
-const BLUE: Scalar = Scalar::new(255.0, 0.0, 0.0, 0.0);
-const CYAN: Scalar = Scalar::new(255.0, 255.0, 0.0, 0.0);
-const GREEN: Scalar = Scalar::new(0.0, 255.0, 0.0, 0.0);
-const YELLOW: Scalar = Scalar::new(0.0, 255.0, 255.0, 0.0);
-const RED: Scalar = Scalar::new(0.0, 0.0, 255.0, 0.0);
-const MAGENTA: Scalar = Scalar::new(255.0, 0.0, 255.0, 0.0);
-const WHITE: Scalar = Scalar::all(255.0);
 
 #[derive(Parser)]
 #[command(about, arg_required_else_help = true, long_about = None, version)]
@@ -224,27 +216,6 @@ struct Colors {
     incircle: Hsb,
 }
 
-/// Hsb
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
-struct Hsb {
-    hue: f64,
-    saturation: f64,
-    brightness: f64,
-}
-
-impl Hsb {
-    fn bgr(&self) -> Result<VecN<u8, 3>> {
-        let hsv = Mat::from_slice(&[VecN([
-            self.hue.round() as u8,
-            self.saturation.round() as u8,
-            self.brightness.round() as u8,
-        ])])?;
-        let mut bgr = Mat::default();
-        cvt_color_def(&hsv, &mut bgr, COLOR_HSV2BGR)?;
-        Ok(*bgr.at(0)?)
-    }
-}
-
 /// Circle
 #[derive(Clone, Copy, Debug, Default)]
 struct Circle {
@@ -261,8 +232,6 @@ impl RectExt for Rect {
         Point2i::new(self.x + self.width, self.y)
     }
 }
-
-mod config;
 
 // fn probabilistic_hough(edges: &Mat) -> Result<()> {
 //     let mut p_lines = VectorOfVec4i::new();

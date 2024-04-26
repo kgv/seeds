@@ -1,7 +1,7 @@
 [package]
+edition = "2021"
 name = "finder"
 version = "0.1.0"
-edition = "2021"
 
 [[bin]]
 name = "algae"
@@ -15,9 +15,6 @@ clap = { version = "4.5.4", features = ["cargo", "derive"] }
 itertools = "0.12.1"
 opencv = "0.91.1"
 # opencv = { git = "https://github.com/TDiblik/opencv-rust-nightly-compilation.git" }
-ordered-float = "4.2.0"
-ron = "0.8.1"
-serde = { version = "1.0.198", features = ["derive"] }
 eframe = { version = "0.27.2", default-features = false, features = [
     "accesskit",
     "default_fonts",
@@ -28,8 +25,11 @@ egui = "0.27.2"
 egui-snarl = { git = "https://github.com/zakarumych/egui-snarl", features = [
     "serde",
 ], rev = "010664736db7e0998aa12288496cc811e9143be2" }
-tracing = "0.1.40"
+ordered-float = "4.2.0"
+ron = "0.8.1"
+serde = { version = "1.0.198", features = ["derive"] }
 thiserror = "1.0.59"
+tracing = "0.1.40"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

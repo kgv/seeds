@@ -21,8 +21,9 @@
 
 [rust]
 ----
-cargo run -- "assets/20240416_164427.jpg"
-cargo run -- "assets/20240416_164427.jpg" --config="config.ron"
+cargo run -- "assets/20240416_164427/20240416_164427.jpg"
+cargo run --bin=seeds -- "assets/20240416_164427/20240416_164427.jpg" --config="config.ron"
+
 cargo run --bin=algae -- "assets/SNAP-212329-0051/SNAP-212329-0051.tif" --config="config.ron"
 ----
 

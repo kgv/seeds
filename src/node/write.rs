@@ -15,7 +15,7 @@ use tracing::error;
 #[derive(Clone, Debug, Default, Deserialize, Hash, Serialize)]
 pub struct Write {
     #[serde(skip)]
-    pub img: Value,
+    pub img: Arc<SyncMat>,
     pub path: PathBuf,
 }
 

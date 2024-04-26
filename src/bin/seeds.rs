@@ -1,35 +1,21 @@
 use anyhow::Result;
 use clap::{command, Parser};
-use config::Config;
+use finder::{Config, Hsb, BLUE, CYAN, GREEN, MAGENTA, RED, WHITE, YELLOW};
 use opencv::{
-    core::{
-        mean, min_max_loc, min_max_loc_def, no_array, Mat1f, Point2d, Point2f, Point2i, Rect,
-        Scalar, VecN, Vector, CV_8UC1,
-    },
-    highgui::{imshow, wait_key_def},
+    core::{mean, min_max_loc, no_array, Point2d, Point2f, Point2i, Rect, Vector, CV_8UC1},
     imgcodecs::{imread, imwrite_def, IMREAD_COLOR},
     imgproc::{
         arc_length, bounding_rect, circle, circle_def, contour_area_def, cvt_color_def,
-        distance_transform_def, distance_transform_with_labels, distance_transform_with_labels_def,
-        draw_contours, draw_contours_def, find_contours_def, line_def, min_area_rect,
-        min_enclosing_circle, moments, morphology_ex_def, point_polygon_test, put_text_def,
-        rectangle_def, threshold, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, COLOR_BGR2HSV,
-        COLOR_HSV2BGR, DIST_L2, DIST_LABEL_PIXEL, DIST_MASK_5, FILLED, FONT_HERSHEY_SIMPLEX,
-        MORPH_DILATE, RETR_EXTERNAL, THRESH_BINARY_INV, THRESH_OTSU,
+        distance_transform_def, draw_contours, draw_contours_def, find_contours_def, line_def,
+        min_area_rect, min_enclosing_circle, moments, point_polygon_test, put_text_def,
+        rectangle_def, threshold, CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, COLOR_BGR2HSV, DIST_L2,
+        DIST_MASK_5, FILLED, FONT_HERSHEY_SIMPLEX, RETR_EXTERNAL, THRESH_BINARY_INV, THRESH_OTSU,
     },
     prelude::*,
 };
 use ron::ser::{to_writer_pretty, PrettyConfig};
 use serde::{Deserialize, Serialize};
 use std::{fs::File, path::PathBuf, process::exit};
-
-const BLUE: Scalar = Scalar::new(255.0, 0.0, 0.0, 0.0);
-const CYAN: Scalar = Scalar::new(255.0, 255.0, 0.0, 0.0);
-const GREEN: Scalar = Scalar::new(0.0, 255.0, 0.0, 0.0);
-const YELLOW: Scalar = Scalar::new(0.0, 255.0, 255.0, 0.0);
-const RED: Scalar = Scalar::new(0.0, 0.0, 255.0, 0.0);
-const MAGENTA: Scalar = Scalar::new(255.0, 0.0, 255.0, 0.0);
-const WHITE: Scalar = Scalar::all(255.0);
 
 #[derive(Parser)]
 #[command(about, arg_required_else_help = true, long_about = None, version)]
@@ -372,27 +358,6 @@ struct Colors {
     incircle: Hsb,
 }
 
-/// Hsb
-#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
-struct Hsb {
-    hue: f64,
-    saturation: f64,
-    brightness: f64,
-}
-
-impl Hsb {
-    fn bgr(&self) -> Result<VecN<u8, 3>> {
-        let hsv = Mat::from_slice(&[VecN([
-            self.hue.round() as u8,
-            self.saturation.round() as u8,
-            self.brightness.round() as u8,
-        ])])?;
-        let mut bgr = Mat::default();
-        cvt_color_def(&hsv, &mut bgr, COLOR_HSV2BGR)?;
-        Ok(*bgr.at(0)?)
-    }
-}
-
 /// Circle
 #[derive(Clone, Copy, Debug, Default)]
 struct Circle {
@@ -409,8 +374,6 @@ impl RectExt for Rect {
         Point2i::new(self.x + self.width, self.y)
     }
 }
-
-mod config;
 
 // fn probabilistic_hough(edges: &Mat) -> Result<()> {
 //     let mut p_lines = VectorOfVec4i::new();
