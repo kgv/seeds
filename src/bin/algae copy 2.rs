@@ -1,23 +1,12 @@
 use anyhow::anyhow;
 use anyhow::Result;
 use clap::{command, Parser};
-use egui::epaint::util::FloatOrd;
-use finder::utils::MatExt;
 use finder::Config;
 use finder::Hsb;
 use finder::GREEN;
 use finder::RED;
 use itertools::Itertools;
-use opencv::core::split;
-use opencv::core::CV_8UC4;
-use opencv::imgproc::connected_components;
-use opencv::imgproc::connected_components_def;
 use opencv::imgproc::convex_hull_def;
-use opencv::imgproc::DistanceTransformMasks;
-use opencv::imgproc::DistanceTypes;
-use opencv::imgproc::ThresholdTypes;
-use opencv::imgproc::DIST_MASK_3;
-use opencv::imgproc::MORPH_CLOSE;
 use opencv::{
     core::{
         greater_than_mat_f64, max, mean, min_max_loc, min_max_loc_def, no_array, subtract_def,
@@ -80,57 +69,76 @@ fn main() -> Result<()> {
         println!("Source image is empty");
         exit(1);
     }
-    source.write(cli.path.with_extension("source.png"))?;
-
-    let mut temp = Vector::<Mat>::default();
-    split(&source, &mut temp)?;
-    temp.as_slice()[0].write(cli.path.with_extension("red.png"))?;
-
+    let path = cli.path.with_extension("source.png");
+    imwrite_def(path.to_str().unwrap(), &source)?;
     // Gray
-    let grayed = source.cvt_color(COLOR_BGR2GRAY)?;
+    let mut grayed = Mat::default();
+    cvt_color_def(&source, &mut grayed, COLOR_BGR2GRAY)?;
+    // // Threshold
+    // let mut thresholded = Mat::default();
+    // threshold(
+    //     &grayed,
+    //     &mut thresholded,
+    //     0.0,
+    //     255.0,
+    //     THRESH_BINARY_INV | THRESH_OTSU,
+    // )?;
+    // let path = cli.path.with_extension(format!("thresholded.png"));
+    // imwrite_def(path.to_str().unwrap(), &thresholded)?;
+
+    // Blured
+    let mut blured = Mat::default();
+    median_blur(&grayed, &mut blured, 9)?;
+    let path = cli.path.with_extension(format!("blured.png"));
+    imwrite_def(path.to_str().unwrap(), &blured)?;
+    // Greater than
+    let greater_than = greater_than_mat_f64(&blured, 150.0)?;
+    let path = cli.path.with_extension(format!("greater_than.png"));
+    imwrite_def(path.to_str().unwrap(), &greater_than)?;
 
     // Threshold
-    let thresholded = grayed.threshold(0.0, 255.0, THRESH_BINARY_INV | THRESH_OTSU)?;
-    thresholded.write(cli.path.with_extension("thresholded.png"))?;
+    let mut thresholded = Mat::default();
+    threshold(
+        &greater_than,
+        &mut thresholded,
+        0.0,
+        255.0,
+        THRESH_BINARY_INV | THRESH_OTSU,
+    )?;
+    let path = cli.path.with_extension(format!("thresholded.png"));
+    imwrite_def(path.to_str().unwrap(), &thresholded)?;
 
-    // Remove holes
-    let closed = thresholded.morphology(MORPH_CLOSE, &Mat::ones(3, 3, CV_8U)?, 4)?;
-    closed.write(cli.path.with_extension("closed.png"))?;
-
-    // Remove noise
-    let opened = closed.morphology(MORPH_OPEN, &Mat::ones(3, 3, CV_8U)?, 2)?;
-    opened.write(cli.path.with_extension("opened.png"))?;
-
-    // Background area
-    let background = opened.dilate(&Mat::ones(3, 3, CV_8U)?, 3)?;
-    background.write(cli.path.with_extension("background.png"))?;
-
-    // Foreground area
-    let distance_transform = opened.distance_transform(DIST_L2, DIST_MASK_5)?;
-    distance_transform.write(cli.path.with_extension("distance_transform.png"))?;
-
-    let tresh = distance_transform
-        .iter::<f32>()?
-        .max_by_key(|(_, value)| value.ord())
-        .unwrap()
-        .1 as f64;
-    let foreground = distance_transform.threshold(0.5 * tresh, 255.0, THRESH_BINARY)?;
-    foreground.write(cli.path.with_extension("foreground.png"))?;
-
-    {
-        let mut image = Mat::default();
-        foreground.convert_to_def(&mut image, CV_8UC4)?;
-        let mut labels = Mat::default();
-        connected_components_def(&image, &mut labels)?;
-
-        labels.write(cli.path.with_extension("labels.png"))?;
+    // Contours
+    let mut contours = Vector::<Mat>::new();
+    find_contours_def(
+        &thresholded,
+        &mut contours,
+        RETR_EXTERNAL,
+        CHAIN_APPROX_SIMPLE,
+    )?;
+    // Filter
+    let contours = contours
+        .into_iter()
+        .filter_map(|contour| match contour_area_def(&contour) {
+            Ok(area) if area < config.contours.min_area => None,
+            Ok(_) => Some(Ok(contour)),
+            Err(error) => Some(Err(anyhow!(error))),
+        })
+        .collect::<Result<Vector<Mat>>>()?;
+    // hull
+    let mut hulls = Vector::<Mat>::new();
+    for contour in &contours {
+        let mut hull = Mat::default();
+        convex_hull_def(&contour, &mut hull)?;
+        hulls.push(hull);
     }
+    // println!("hulled: {hulled:?}");
 
-    // // Finding unknown region
-    // let mut unknown = foreground.clone();
-    // subtract_def(&background, &foreground, &mut unknown)?;
-    // let path = cli.path.with_extension(format!("unknown.png"));
-    // imwrite_def(path.to_str().unwrap(), &unknown)?;
+    let mut contoured = source.clone();
+    draw_contours_def(&mut contoured, &contours, -1, RED)?;
+    draw_contours_def(&mut contoured, &hulls, -1, GREEN)?;
+    let path = cli.path.with_extension(format!("contoured.png"));
+    imwrite_def(path.to_str().unwrap(), &contoured)?;
 
     // // Subtract
     // let mut subtracted = Mat::default();
