@@ -12,9 +12,7 @@ name = "seeds"
 [dependencies]
 anyhow = "1.0.82"
 clap = { version = "4.5.4", features = ["cargo", "derive"] }
-itertools = "0.12.1"
-opencv = "0.91.1"
-# opencv = { git = "https://github.com/TDiblik/opencv-rust-nightly-compilation.git" }
+cv = { git = "https://github.com/kgv/opencv", package = "opencv" }
 eframe = { version = "0.27.2", default-features = false, features = [
     "accesskit",
     "default_fonts",
@@ -25,7 +23,13 @@ egui = "0.27.2"
 egui-snarl = { git = "https://github.com/zakarumych/egui-snarl", features = [
     "serde",
 ], rev = "010664736db7e0998aa12288496cc811e9143be2" }
+image = { version = "0.25.1", features = ["tiff"] }
+itertools = "0.12.1"
+kmeans_colors = "0.6.0"
+num = "0.4.2"
+opencv = "0.91.2"
 ordered-float = "4.2.0"
+palette = "0.7.5"
 ron = "0.8.1"
 serde = { version = "1.0.198", features = ["derive"] }
 thiserror = "1.0.59"

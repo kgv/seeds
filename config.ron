@@ -1,4 +1,10 @@
 (
+    kmeans: (
+        iterations: 20,
+        k: 4,
+        runs: 1,
+        seed: 0,
+    ),
     threshold: (
         thresh: 0.0,
         max: 255.0,

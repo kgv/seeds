@@ -1,5 +1,3 @@
-pub use self::opencv::MatExt;
-
 use ::opencv::{
     boxed_ref::BoxedRef,
     core::{Mat, MatTraitConst, MatTraitConstManual, ToInputArray, _InputArray, type_to_string},
@@ -48,5 +46,3 @@ impl ToInputArray for SyncMat {
         self.0.input_array()
     }
 }
-
-mod opencv;

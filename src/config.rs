@@ -1,4 +1,4 @@
-use self::{contours::Contours, threshold::Threshold};
+use self::{contours::Contours, kmeans::KMeans, threshold::Threshold};
 use anyhow::Result;
 use ron::de::from_reader;
 use serde::{Deserialize, Serialize};
@@ -7,6 +7,7 @@ use std::{fs::File, path::Path};
 /// Config
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
 pub struct Config {
+    pub kmeans: KMeans,
     pub threshold: Threshold,
     pub contours: Contours,
 }
@@ -15,6 +16,30 @@ impl Config {
     pub fn new(path: &Path) -> Result<Self> {
         let file = File::open(path)?;
         Ok(from_reader(file)?)
+    }
+}
+
+mod kmeans {
+    use serde::{Deserialize, Serialize};
+
+    /// K-means
+    #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+    pub struct KMeans {
+        pub iterations: usize,
+        pub k: usize,
+        pub runs: u64,
+        pub seed: u64,
+    }
+
+    impl Default for KMeans {
+        fn default() -> Self {
+            Self {
+                iterations: 20,
+                k: 5,
+                runs: 1,
+                seed: 0,
+            }
+        }
     }
 }
 
