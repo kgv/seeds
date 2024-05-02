@@ -15,13 +15,13 @@ use itertools::Itertools;
 use kmeans_colors::{get_kmeans_hamerly, Kmeans, MapColor};
 use opencv::{
     core::{
-        no_array, normalize_def, MatTraitConst, Point, Point2f, Point2i, Rect, Scalar, Size, VecN,
-        Vector, CV_32S, CV_8U,
+        copy_to, no_array, normalize_def, MatTraitConst, Point, Point2f, Point2i, Rect, Scalar,
+        Size, VecN, Vector, CV_32S, CV_8U, CV_8UC1, CV_8UC3,
     },
     imgcodecs::{imread, IMREAD_COLOR, IMREAD_GRAYSCALE},
     imgproc::{
         hough_circles, hough_circles_def, match_template, match_template_def, CHAIN_APPROX_SIMPLE,
-        COLOR_BGR2GRAY, FILLED, HOUGH_GRADIENT, HOUGH_GRADIENT_ALT, RETR_EXTERNAL,
+        COLOR_BGR2GRAY, FILLED, HOUGH_GRADIENT, HOUGH_GRADIENT_ALT, RETR_EXTERNAL, THRESH_BINARY,
         TM_CCOEFF_NORMED,
     },
     prelude::*,
@@ -140,11 +140,35 @@ fn main() -> Result<()> {
     let mut scale = source.clone();
     scale.draw_rectangle(match_template, RED)?;
     scale.write(cli.path.with_extension("scale.png"))?;
-    let mean = source.mean(&template)?;
-    println!("mean: {mean:?}");
-
     let mum = match_template.width / 10;
     println!("mum: {mum:?}");
+
+    // let gaussian_blur = source.gaussian_blur(Size::new(9, 9), 100.0)?;
+    // gaussian_blur.write(cli.path.with_extension("_template.png"))?;
+
+    let mask = {
+        let template = template.convert_color(COLOR_BGR2GRAY)?;
+        let mut mask = Mat::zeros_size(source.size()?, CV_8UC1)?.to_mat()?;
+        template.copy_to(&mut mask.roi_mut(match_template)?)?;
+        let mean = source.mean(&mask)?;
+        println!("mean: {mean:?}");
+        let mut t = source.clone();
+        let temp = Mat::new_size_with_default(template.size()?, CV_8UC3, mean)?;
+        temp.copy_to(&mut t.roi_mut(match_template)?)?;
+        t.write(cli.path.with_extension("_temp.png"))?;
+        mask
+    };
+    mask.write(cli.path.with_extension("_mask.png"))?;
+
+    // let mut dst = Mat::zeros_size(source.size()?, CV_8UC1)?.to_mat()?;
+    // copy_to(&source, &mut dst, &mask)?;
+
+    // // let mask = template.convert_color(COLOR_BGR2GRAY)?;
+    // println!("source: {:?}", source);
+    // println!("template: {:?}", mask);
+    // mask.write(cli.path.with_extension("_template.png"))?;
+    // let mean = source.mean(&mask)?;
+    // println!("mean: {mean:?}");
 
     // Foreground
     let greater_than3 = gray3
